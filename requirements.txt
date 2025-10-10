@@ -1,0 +1,12 @@
+pandas
+numpy
+matplotlib
+plotly
+folium
+ortools
+seaborn
+geopandas
+folium
+kagglehub
+sqlalchemy
+requests
