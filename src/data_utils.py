@@ -69,37 +69,36 @@ def load_and_concat_vrptw(data_dict):
     print(f"Loaded and concatenated {len(vrptw_df)} rows, {len(vrptw_df.columns)} columns from {len(data_dict)} instances.")
     return vrptw_df
 
-# Call the function to ensure correct working directory
-def load_cleaned_vrptw(processed_path="data/processed/vrptw_cleaned.csv"):
+def load_processed_data(processed_path: str) -> pd.DataFrame:
     """
-    Load the preprocessed Solomon VRPTW dataset from disk.
+    Load a processed dataset from the 'data/processed' directory.
 
-    This function assumes the cleaned dataset was saved during
-    the EDA or preprocessing step. It serves as a quick access point
-    for downstream modeling or feature engineering stages.
+    This utility function provides a consistent interface to load
+    any intermediate dataset generated during the project's pipeline
+    (e.g., cleaned data, normalized data, distance or time matrices).
 
     Args:
-        clean_path (str): Path to the cleaned CSV file.
+        processed_path (str): Full path to the processed CSV file.
 
     Returns:
-        pd.DataFrame: Cleaned VRPTW DataFrame.
+        pd.DataFrame: Loaded DataFrame from the specified path.
 
     Raises:
-        FileNotFoundError: If the cleaned dataset file does not exist.
+        FileNotFoundError: If the provided dataset path does not exist.
 
     Example:
-        >>> df = load_cleaned_vrptw()
+        >>> df = load_processed_data("data/processed/vrptw_ready_for_optimization.csv")
         >>> df.info()
     """
     if not os.path.exists(processed_path):
         raise FileNotFoundError(
             f"Processed dataset not found at {processed_path}. "
-            "Please run 01_eda.ipynb to generate it first."
+            "Please ensure the previous notebook in the pipeline has been executed successfully."
         )
-    
-    print(f"Loading processed VRPTW dataset from: {processed_path}")
+
+    print(f"Loading processed dataset from: {processed_path}")
     df = pd.read_csv(processed_path)
-    print(f"Loaded dataset with {df.shape[0]} rows and {df.shape[1]} columns.")
+    print(f"✅ Loaded dataset with {df.shape[0]} rows and {df.shape[1]} columns.")
     return df
 
 def save_processed_data(df, filename: str, folder: str = "data/processed"):

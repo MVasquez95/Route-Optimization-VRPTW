@@ -4,3 +4,6 @@ __pycache__/
 .env
 .venv/
 .ipynb_checkpoints/
+# Ignore data files
+vrptw_distance_matrix.csv
+vrptw_time_matrix.csv
