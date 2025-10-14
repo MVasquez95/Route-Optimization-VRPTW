@@ -73,9 +73,9 @@ def load_processed_data(processed_path: str) -> pd.DataFrame:
     """
     Load a processed dataset from the 'data/processed' directory.
 
-    This utility function provides a consistent interface to load
-    any intermediate dataset generated during the project's pipeline
-    (e.g., cleaned data, normalized data, distance or time matrices).
+    Automatically detects if the first column represents an index
+    (e.g., for square matrices like distance/time) and reloads 
+    accordingly. This allows consistent loading across all pipeline stages.
 
     Args:
         processed_path (str): Full path to the processed CSV file.
@@ -84,38 +84,73 @@ def load_processed_data(processed_path: str) -> pd.DataFrame:
         pd.DataFrame: Loaded DataFrame from the specified path.
 
     Raises:
-        FileNotFoundError: If the provided dataset path does not exist.
+        FileNotFoundError: If the specified dataset does not exist.
 
     Example:
-        >>> df = load_processed_data("data/processed/vrptw_ready_for_optimization.csv")
-        >>> df.info()
+        >>> df = load_processed_data("data/processed/vrptw_distance_matrix.csv")
+        >>> df.shape
+        (5656, 5655)
     """
     if not os.path.exists(processed_path):
         raise FileNotFoundError(
             f"Processed dataset not found at {processed_path}. "
-            "Please ensure the previous notebook in the pipeline has been executed successfully."
+            "Please ensure the previous pipeline step has been executed successfully."
         )
 
     print(f"Loading processed dataset from: {processed_path}")
+
+    # Load normally first
     df = pd.read_csv(processed_path)
+
+    # If first column looks like an index (e.g., "Unnamed: 0"), reload properly
+    if df.columns[0].startswith("Unnamed"):
+        df = pd.read_csv(processed_path, index_col=0)
+
     print(f"✅ Loaded dataset with {df.shape[0]} rows and {df.shape[1]} columns.")
     return df
 
-def save_processed_data(df, filename: str, folder: str = "data/processed"):
+def save_processed_data(df: pd.DataFrame, filename: str, folder: str = "data/processed", enforce_index_columns: bool = False) -> str:
     """
-    Saves a processed DataFrame to CSV in a standardized location.
+    Save a processed DataFrame to CSV in a standardized location.
+
+    This utility ensures consistency in saving intermediate datasets 
+    (e.g., cleaned data, normalized data, or VRPTW matrices). 
+    Optionally enforces that index and column labels are aligned, 
+    which is useful for square matrices (e.g., distance/time).
 
     Args:
-        df (pd.DataFrame): DataFrame to save.
-        filename (str): Output CSV filename.
-        folder (str): Directory where to save the file (default: 'data/processed').
+        df (pd.DataFrame): The DataFrame to save.
+        filename (str): Output CSV filename (e.g., "vrptw_distance_matrix.csv").
+        folder (str, optional): Directory where the file will be saved. 
+            Defaults to "data/processed".
+        enforce_index_columns (bool, optional): 
+            If True, checks whether index labels match column names 
+            (common for symmetric matrices). Raises ValueError if not. 
+            Defaults to False.
 
     Returns:
-        str: Path where the file was saved.
+        str: The full path where the file was saved.
+
+    Raises:
+        ValueError: If `enforce_index_columns=True` and index/columns mismatch.
     """
     os.makedirs(folder, exist_ok=True)
     output_path = os.path.join(folder, filename)
-    df.to_csv(output_path, index=False)
+
+    # Optional integrity check for square matrices
+    if enforce_index_columns:
+        if df.shape[0] != df.shape[1]:
+            raise ValueError(
+                f"Matrix must be square when enforce_index_columns=True. "
+                f"Got {df.shape[0]}x{df.shape[1]}."
+            )
+        if not all(df.index.astype(str) == df.columns.astype(str)):
+            raise ValueError(
+                "Index and column labels must match exactly when enforcing harmonization."
+            )
+
+    # Save including the index for reproducibility
+    df.to_csv(output_path, index=True)
 
     print(f"✅ Data saved successfully at: {output_path}")
     print(f"Rows: {df.shape[0]} | Columns: {df.shape[1]}")
