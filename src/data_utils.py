@@ -155,3 +155,26 @@ def save_processed_data(df: pd.DataFrame, filename: str, folder: str = "data/pro
     print(f"✅ Data saved successfully at: {output_path}")
     print(f"Rows: {df.shape[0]} | Columns: {df.shape[1]}")
     return output_path
+
+def prepare_vrptw_data(time_df, num_vehicles=3, depot_index=0):
+    """
+    Prepares structured data for the VRPTW solver.
+    
+    Args:
+        time_df (pd.DataFrame): Time or distance matrix.
+        num_vehicles (int): Number of available vehicles.
+        depot_index (int): Index of depot node (default 0).
+    
+    Returns:
+        dict: VRPTW data dictionary for OR-Tools solver.
+    """
+    time_matrix = time_df.values
+    n_nodes = len(time_matrix)
+    
+    data = {
+        "time_matrix": time_matrix,
+        "n_nodes": n_nodes,
+        "num_vehicles": num_vehicles,
+        "depot_index": depot_index
+    }
+    return data
